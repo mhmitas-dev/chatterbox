@@ -119,7 +119,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  .primary-container {
+    @apply mx-auto px-5 max-w-5xl
   }
 }
