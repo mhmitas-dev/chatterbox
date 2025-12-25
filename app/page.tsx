@@ -175,7 +175,7 @@ const Clubhouse: React.FC = () => {
 
           <Separator />
 
-          <div className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto p-8 bg-linear-to-br from-blue-900/30 via-rose-900/30 to-rose-950/30">
             <Stage />
           </div>
 
