@@ -15,7 +15,7 @@ import {
 import { useLocalParticipant } from '@livekit/components-react';
 import { Link, Mic, MicOff } from "lucide-react";
 import { Track, TokenSource } from 'livekit-client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import type { NextPage } from 'next';
 
@@ -25,70 +25,87 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-const Clubhouse: NextPage = () => {
-  const [roomName, setRoomName] = useState('');
-  const [participantName, setParticipantName] = useState('');
-  const [tryToConnect, setTryToConnect] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const Clubhouse: React.FC = () => {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
 
+  // Read initial values directly from URL (reactive!)
+  const initialRoomName = searchParams?.get('roomName') ?? ''
+  const initialParticipantName = searchParams?.get('participantName') ?? ''
+  const target = searchParams?.get('target')
+
+  const [roomName, setRoomName] = useState(initialRoomName)
+  const [participantName, setParticipantName] = useState(initialParticipantName)
+  const [tryToConnect, setTryToConnect] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Optional: react to URL changes after mount (e.g. browser back/forward or external link change)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const rName = params.get('roomName');
-    const pName = params.get('participantName');
-    if (rName) setRoomName(rName);
-    if (pName) setParticipantName(pName);
-  }, []);
+    setRoomName(searchParams?.get('roomName') ?? '')
+    setParticipantName(searchParams?.get('participantName') ?? '')
+  }, [searchParams])
 
-  const updateURLParams = (room: string, name: string) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set('roomName', room);
-    url.searchParams.set('participantName', name);
-    window.history.replaceState({}, '', url.toString());
-  };
+  // Cleaner URL update (shallow replace, no full navigation)
+  const updateURLParams = useCallback(
+    (newRoom: string, newName: string) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? '')
+      if (newRoom) {
+        params.set('roomName', newRoom)
+      } else {
+        params.delete('roomName')
+      }
+      if (newName) {
+        params.set('participantName', newName)
+      } else {
+        params.delete('participantName')
+      }
 
-  const tokenSource = TokenSource.endpoint("/api/token");
+      // Preserve other params if needed (e.g. target)
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname
+      router.replace(newUrl, { scroll: false })
+    },
+    [searchParams, pathname, router]
+  )
+
+  const tokenSource = TokenSource.endpoint("/api/token")
   const session = useSession(tokenSource, {
     roomName,
     participantIdentity: participantName,
     participantName: participantName,
-  });
+  })
 
   useEffect(() => {
     if (tryToConnect && roomName && participantName) {
-      setError(null);
+      setError(null)
       session.start({ tracks: { microphone: { enabled: true } } })
         .catch((err) => {
-          setError("Disconnected");
-          setTryToConnect(false);
-        });
+          setError("Disconnected")
+          setTryToConnect(false)
+        })
     } else if (!tryToConnect) {
-      session.end().catch(() => { });
+      session.end().catch(() => { })
     }
-  }, [tryToConnect, session.start, session.end, roomName, participantName]);
+  }, [tryToConnect, session, roomName, participantName])
 
   const handleJoin = () => {
     if (roomName && participantName) {
-      updateURLParams(roomName, participantName);
-      setTryToConnect(true);
+      updateURLParams(roomName, participantName)
+      setTryToConnect(true)
     }
-  };
+  }
 
   const copyInviteLink = () => {
-    // 1. Get the current base URL (e.g., https://yourapp.com/clubhouse)
-    const baseUrl = window.location.origin + window.location.pathname;
+    const baseUrl = window.location.origin + pathname
+    const inviteUrl = `${baseUrl}?roomName=${encodeURIComponent(roomName)}`
 
-    // 2. Create a clean URL with only the roomName
-    const inviteUrl = `${baseUrl}?roomName=${encodeURIComponent(roomName)}`;
-
-    // 3. Copy to clipboard
-    navigator.clipboard.writeText(inviteUrl);
-
-    // 4. Sonner notification
+    navigator.clipboard.writeText(inviteUrl)
     toast.success("Room link copied!", {
       description: `Invite your friends and have a party`,
-    });
-  };
+    })
+  }
 
   return (
     <div className="relative h-screen bg-background text-foreground overflow-hidden">
@@ -198,7 +215,7 @@ const CustomParticipantTile = () => {
             isSpeaking ? "ring-2 ring-offset-2 ring-blue-500" : "ring-0"
           )}
         >
-          <AvatarImage src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${id}`} />
+          <AvatarImage src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${id}`} />
           <AvatarFallback className="bg-secondary text-xs uppercase">{id.substring(0, 2)}</AvatarFallback>
         </Avatar>
         {isMuted && (
