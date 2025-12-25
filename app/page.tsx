@@ -198,7 +198,7 @@ const CustomParticipantTile = () => {
             isSpeaking ? "ring-2 ring-offset-2 ring-blue-500" : "ring-0"
           )}
         >
-          <AvatarImage src={`https://api.dicebear.com/9.x/pixel-art/svg?seed=${id}`} />
+          <AvatarImage src={`https://api.dicebear.com/9.x/fun-emoji/svg?seed=${id}`} />
           <AvatarFallback className="bg-secondary text-xs uppercase">{id.substring(0, 2)}</AvatarFallback>
         </Avatar>
         {isMuted && (
