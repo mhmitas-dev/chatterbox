@@ -1,7 +1,7 @@
 "use client"
 
 import { getLivekitToken } from '@/lib/actions/token.action';
-import { useIsSpeaking, useMaybeParticipantContext, useParticipantContext, useTrackRefContext } from '@livekit/components-react';
+import { useIsSpeaking, useParticipantContext, useTrackRefContext } from '@livekit/components-react';
 import {
     GridLayout,
     ParticipantTile,
@@ -114,7 +114,8 @@ function MyVideoGrid() {
 }
 
 export function CustomMeetTile({ trackRef }: { trackRef?: any }) {
-    const isSpeaking = useIsSpeaking(trackRef?.participant);
+    const participant = trackRef?.participant;
+    const isSpeaking = useIsSpeaking(participant);
 
     return (
         <ParticipantTile
@@ -125,16 +126,12 @@ export function CustomMeetTile({ trackRef }: { trackRef?: any }) {
             )}
         >
             <VideoTrack trackRef={trackRef} />
-            <TileFooter />
-            {/* <SpeakingBorder participant={trackRef?.participant} /> */}
+            <TileFooter trackRef={trackRef} participant={participant} />
         </ParticipantTile>
     );
 }
 
-function TileFooter() {
-    const trackRef = useTrackRefContext();
-    const participant = useParticipantContext();
-
+function TileFooter({ trackRef, participant }: { trackRef?: any, participant?: any }) {
     if (!trackRef || !participant) return null;
 
     return (
@@ -142,16 +139,5 @@ function TileFooter() {
             <span>{participant.identity}</span>
             <TrackMutedIndicator trackRef={trackRef} />
         </div>
-    );
-}
-
-function SpeakingBorder({ participant }: { participant?: any }) {
-    const isSpeaking = useIsSpeaking(participant);
-
-    return (
-        <div className={cn(
-            "absolute inset-0 z-10 pointer-events-none rounded-xl border",
-            isSpeaking ? "border-blue-500" : "border-transparent"
-        )} />
     );
 }
