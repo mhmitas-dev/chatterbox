@@ -5,8 +5,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { room_name, participant_name } = body; // ← Use underscores!
 
-    console.log({ room_name, participant_name })
-
     if (!room_name || !participant_name) {
         return NextResponse.json({ error: 'Missing room_name or participant_name' }, { status: 400 });
     }
@@ -30,7 +28,6 @@ export async function POST(req: NextRequest) {
         participant_token: token,
         server_url: process.env.LIVEKIT_URL
     };
-    console.log('Returning:', response);
 
     return NextResponse.json(response);
 }

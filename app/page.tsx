@@ -17,7 +17,6 @@ import { Link, Mic, MicOff } from "lucide-react";
 import { Track, TokenSource } from 'livekit-client';
 import { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import type { NextPage } from 'next';
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
