@@ -1,5 +1,4 @@
 import Example2 from "@/components/Example2";
-import { ResolvingMetadata } from "next";
 
 const page = async (props: {
     searchParams?: Promise<{
