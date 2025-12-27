@@ -1,7 +1,7 @@
 "use client"
 
 import { getLivekitToken } from '@/lib/actions/token.action';
-import { useIsSpeaking, useParticipantContext, useTrackRefContext } from '@livekit/components-react';
+import { useIsSpeaking, useParticipantContext, useTrackRefContext, VideoConference } from '@livekit/components-react';
 import {
     GridLayout,
     ParticipantTile,
@@ -113,30 +113,45 @@ function MyVideoGrid() {
     );
 }
 
-export function CustomMeetTile({ trackRef }: { trackRef?: any }) {
-    const participant = trackRef?.participant;
+import { useMaybeTrackRefContext } from "@livekit/components-react";
+
+export function CustomMeetTile({ trackRef: propsTrackRef }: { trackRef?: any }) {
+    // 1. Try to get the track from Context (Grid mode)
+    const contextTrackRef = useMaybeTrackRefContext();
+
+    // 2. Use the prop if it exists (Manual mode), otherwise fall back to context
+    const trackRef = propsTrackRef ?? contextTrackRef;
+
+    // 3. If we still have no track (which shouldn't happen if used correctly), return null
+    if (!trackRef) return null;
+
+    // Now we have a guaranteed trackRef to use everywhere!
+    const participant = trackRef.participant;
     const isSpeaking = useIsSpeaking(participant);
 
     return (
         <ParticipantTile
             trackRef={trackRef}
             className={cn(
-                "relative h-full w-full rounded-xl overflow-hidden bg-slate-900 border-2 transition-all",
+                "relative h-full w-full overflow-hidden bg-slate-900 border-2 transition-all",
                 isSpeaking ? "border-blue-500 ring-2 ring-blue-500/20" : "border-transparent"
             )}
         >
             <VideoTrack trackRef={trackRef} />
-            <TileFooter trackRef={trackRef} participant={participant} />
+            {/* We pass the 'found' trackRef explicitly to the footer */}
+            <TileFooter trackRef={trackRef} />
         </ParticipantTile>
     );
 }
 
-function TileFooter({ trackRef, participant }: { trackRef?: any, participant?: any }) {
-    if (!trackRef || !participant) return null;
+// 2. The Footer (Pure Component - No Context Hooks)
+function TileFooter({ trackRef }: { trackRef: any }) {
+    const participant = trackRef.participant;
 
     return (
-        <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 px-2 py-1 rounded text-white text-xs backdrop-blur-md">
-            <span>{participant.identity}</span>
+        <div className="absolute bottom-2 left-2 flex items-center gap-2 bg-black/60 px-2 py-1 rounded text-white text-xs backdrop-blur-md z-20">
+            <span>{participant?.identity}</span>
+            {/* Pass trackRef directly to the indicator so IT doesn't crash either */}
             <TrackMutedIndicator trackRef={trackRef} />
         </div>
     );
